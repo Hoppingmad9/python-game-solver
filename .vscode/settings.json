@@ -4,5 +4,6 @@
   "python.linting.pylintArgs": [
     "--extension-pkg-allow-list.=win32gui",
     "--extension-pkg-allow-list.=pyautogui",
+    "--extension-pkg-allow-list.=cv2",
   ]
 }
