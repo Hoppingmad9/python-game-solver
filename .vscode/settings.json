@@ -5,5 +5,7 @@
     "--extension-pkg-allow-list.=win32gui",
     "--extension-pkg-allow-list.=pyautogui",
     "--extension-pkg-allow-list.=cv2",
+    "--extension-pkg-allow-list.=pstesseract",
+    "--extension-pkg-allow-list.=pywinauto",
   ]
 }
