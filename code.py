@@ -21,6 +21,8 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.DEBUG,
                     stream=sys.stdout)
 
+pyautogui.PAUSE = 0.01
+
 def get_active_window():
     """
     get the currently active window
@@ -378,6 +380,7 @@ def check_solved(grid):
     """
     checks for rows/cols where tents = open spaces/groups
     """
+    # print(grid)
     for i,x in enumerate(grid[:-1]):
         spaces, tents_placed = get_spaces(x[0])
         possible_placements = spaces_to_places(spaces)
@@ -605,6 +608,7 @@ def check_lonely_straight_tree(grid, extra = False):
                     grid[spaces[0]][0][spaces[1]] = "x"
                     clear_tent(grid, spaces[0], spaces[1])
                 elif (len(spaces) == 2):
+                    # extra = False
                     if (extra):
                         if (spaces[0][0] == spaces[1][0]):
                             # print(i, j)
@@ -620,11 +624,18 @@ def check_lonely_straight_tree(grid, extra = False):
                                     tents += 1
                             # print(tents, grid[spaces[0][0]][1])
                             # print(tents == (int(grid[spaces[0][0]][1]) -1))
-                            if (tents == (int(grid[spaces[0][0]][1]) -1)):
+                            if (tents == (int(grid[spaces[0][0]][1]) - 1)):
                                 for k,z in enumerate(grid[spaces[0][0]][0]):
                                     if (not k == spaces[0][1] and not k == spaces[1][1]):
                                         if (grid[spaces[0][0]][0][k] == " "):
                                             grid[spaces[0][0]][0][k] = "."
+                            if False:
+                                print('extraex')
+                                if (tents == (int(grid[spaces[0][0]][1]) - 2)):
+                                    for k,z in enumerate(grid[spaces[0][0]][0]):
+                                        if (not k == spaces[0][1] and not k == spaces[1][1]):
+                                            if (grid[spaces[0][0]][0][k] == " "):
+                                                grid[spaces[0][0]][0][k] = "x"
                         elif (spaces[0][1] == spaces[1][1]):
                             # print(i, j)
                             # # spaces in same col
@@ -644,6 +655,45 @@ def check_lonely_straight_tree(grid, extra = False):
                                     if (not k == spaces[0][0] and not k == spaces[1][0]):
                                         if (grid[k][0][spaces[0][1]] == " "):
                                             grid[k][0][spaces[0][1]] = "."
+                            if (extra == "eurgh"):
+                                print('extraex')
+                                print(i,j)
+                                print(spaces)
+                                print(tents)
+                                print(grid[-1][0][spaces[0][1]])
+                                print(grid)
+                                if (tents == (int(grid[-1][0][spaces[0][1]]) - 2)):
+                                    trees = 0
+                                    # check top
+                                    if (i > 1):
+                                        if (grid[i-2][0][j] == 'T' or grid[i-2][0][j] == 'C'):
+                                            trees += 1
+                                    # check above left
+                                    if (i > 0 and j > 0):
+                                        if (grid[i-1][0][j-1] == 'T' or grid[i-1][0][j-1] == 'C'):
+                                            trees += 1
+                                    # check above right
+                                    if (i > 0 and j < (GAME_COLS - 1)):
+                                        if (grid[i-1][0][j+1] == 'T' or grid[i-1][0][j+1] == 'C'):
+                                            trees += 1
+                                    # check below left
+                                    if (i < (GAME_ROWS - 1) and j > 0):
+                                        if (grid[i+1][0][j-1] == 'T' or grid[i+1][0][j-1] == 'C'):
+                                            trees += 1
+                                    # check below right
+                                    if (i < (GAME_ROWS - 1) and j < (GAME_COLS - 1)):
+                                        if (grid[i+1][0][j+1] == 'T' or grid[i+1][0][j+1] == 'C'):
+                                            trees += 1
+                                    # check bottom
+                                    if (i < (GAME_ROWS - 2)):
+                                        if (grid[i+2][0][j] == 'T' or grid[i+2][0][j] == 'C'):
+                                            trees += 1
+                                    print(trees)
+                                    if trees == 0:
+                                        for k,z in enumerate(get_col(grid, spaces[0][1])):
+                                            if (not k == spaces[0][0] and not k == spaces[1][0]):
+                                                if (grid[k][0][spaces[0][1]] == " "):
+                                                    grid[k][0][spaces[0][1]] = "X"
 
 def check_swamp(grid, row, col):
     """
@@ -671,6 +721,7 @@ SOLVE_STATS = {"puzzles": 0,
                 "loops": 0,
                 "swamps": 0,
                 "straights": 0,
+                "eurghs": 0,
                 "max": 0,
                 "min": 99,
                 "average_loops": 0}
@@ -828,10 +879,11 @@ for loop in range(PUZZLES_TO_SOLVE):
     # check_lonely(working_grid)
 
     solve_loops = 0
-    show_working = False
+    show_working = True
     while True:
         solve_loops += 1
         start_grid = copy.deepcopy(working_grid)
+        # print(working_grid)
         check_lonely(working_grid)
         check_solved(working_grid)
         check_done(working_grid)
@@ -857,9 +909,13 @@ for loop in range(PUZZLES_TO_SOLVE):
                 SOLVE_STATS["straights"] += 1
                 check_lonely_straight_tree(working_grid, True)
                 if (start_grid == working_grid):
-                    print(f"No change after straight.")
-                    show_working = True
-                    break
+                    print(f"No change after straight. Trying eurgh.")
+                    SOLVE_STATS["eurghs"] += 1
+                    check_lonely_straight_tree(working_grid, "eurgh")
+                    if (start_grid == working_grid):
+                        print(f"No change after eurgh.")
+                        show_working = True
+                        break
 
     # check_lonely(working_grid)
     # check_solved(working_grid)
@@ -874,16 +930,17 @@ for loop in range(PUZZLES_TO_SOLVE):
     # print_grid(working_grid)
     # check_lonely(working_grid, True)
 
+    # check_lonely_straight_tree(working_grid, "eurgh")
     click_grid(working_grid, show_working)
     if (show_working):
         print_grid(working_grid)
         break
 
-    # sleep(1)
+    # sleep(0.5)
     # pyautogui.press('n')
-    # sleep(4)
+    # sleep(0.5)
 
-SOLVE_STATS["average_loops"] = SOLVE_STATS["loops"]/SOLVE_STATS["puzzles"]
+SOLVE_STATS["average_loops"] = SOLVE_STATS["loops"]/max(SOLVE_STATS["puzzles"], 1)
 
 check_lonely_straight_tree(working_grid, True)
 print_grid(working_grid)
